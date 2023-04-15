@@ -24,6 +24,24 @@ direction = (0, 1)
 # 食物初始化
 food = [random.randint(1, HEIGHT - 2), random.randint(1, WIDTH - 2)]
 
+# 初始方向
+is_horize = True
+
+# 变量
+HORI = "■"
+HORI_HEAD = f"{Fore.GREEN}■{Style.RESET_ALL}"
+VERT = "█"
+VERT_HEAD = f"{Fore.GREEN}█{Style.RESET_ALL}"
+
+CORNOR = [
+    ["╔", "╗"],
+    ["╚", "╝"],
+]
+FOOD = f"{Fore.RED}■{Style.RESET_ALL}"
+BORDER = f"{Fore.WHITE}█{Style.RESET_ALL}"
+
+SLEEP_DRAW = 0.3
+SLEEP_PRESS_DRAW = 0.1
 
 def clear_screen():
     if os.name == "posix":
@@ -31,23 +49,23 @@ def clear_screen():
     else:
         os.system("cls")
 
+def get_snake_color(color_code: float,char:str) -> str:
+    """根据颜色代码生成蛇身部分的颜色。
 
-is_horize = True
-HORI = f"{Fore.GREEN}■{Style.RESET_ALL}"
-HORI_HEAD = f"{Fore.BLUE}■{Style.RESET_ALL}"
-VERT = f"{Fore.GREEN}█{Style.RESET_ALL}"
-VERT_HEAD = f"{Fore.BLUE}█{Style.RESET_ALL}"
+    Args:
+        color_code (float): 颜色代码（范围：0-1）。
 
-CORNOR = [
-    [f"{Fore.GREEN}╔{Style.RESET_ALL}", f"{Fore.GREEN}╗{Style.RESET_ALL}"],
-    [f"{Fore.GREEN}╚{Style.RESET_ALL}", f"{Fore.GREEN}╝{Style.RESET_ALL}"],
-]
+    Returns:
+        str: 返回带有指定颜色的蛇身部分。
+    """
+    return f"\033[38;2;0;0;{int(color_code*225)}m{char}{Style.RESET_ALL}"
 
 
 def draw_board():
     board = [[" " for _ in range(WIDTH)] for _ in range(HEIGHT)]
 
     # 绘制蛇
+    lensnake=len(snake)
     for i, segment in enumerate(snake):
         if i == 0:  # 头部
             board[segment[0]][segment[1]] = HORI_HEAD if is_horize else VERT_HEAD
@@ -55,31 +73,30 @@ def draw_board():
             prev_segment = snake[i - 1]
 
             if segment[0] != prev_segment[0]:
-                board[segment[0]][segment[1]] = VERT
+                char = VERT
             else:
-                board[segment[0]][segment[1]] = HORI
+                char = HORI
 
             if i < len(snake)-1:
                 next_segment = snake[i + 1]
                 ys = [prev_segment[0], segment[0], next_segment[0]]
                 xs = [prev_segment[1], segment[1], next_segment[1]]
                 if (ys.count(max(ys)) != 3) and (xs.count(max(xs)) != 3):
-                    board[segment[0]][segment[1]] = CORNOR[ys.count(max(ys))-1][xs.count(max(xs))-1]
-
+                    char = CORNOR[ys.count(max(ys))-1][xs.count(max(xs))-1]
+            board[segment[0]][segment[1]] = get_snake_color(i/lensnake,char)
     # 绘制食物
-    board[food[0]][food[1]] = f"{Fore.RED}■{Style.RESET_ALL}"
+    board[food[0]][food[1]] = FOOD
 
     # 绘制边界
     for i in range(HEIGHT):
-        board[i][0] = f"{Fore.WHITE}█{Style.RESET_ALL}"
-        board[i][-1] = f"{Fore.WHITE}█{Style.RESET_ALL}"
+        board[i][0],board[i][-1] = BORDER,BORDER
     for i in range(WIDTH):
-        board[0][i] = f"{Fore.WHITE}█{Style.RESET_ALL}"
-        board[-1][i] = f"{Fore.WHITE}█{Style.RESET_ALL}"
+        board[0][i],board[-1][i] = BORDER,BORDER
 
+    # 其他输出
     clear_screen()
     print("\n".join(["".join(row) for row in board]))
-    print("Score:", len(snake) - 3)
+    print(f"Score[{WIDTH}x{HEIGHT}]:", len(snake) - 3)
 
 
 def move_snake():
@@ -101,18 +118,16 @@ def check_collision():
         os._exit(0)
 
 
-def main_call():
+def main_call(sleep=SLEEP_PRESS_DRAW):
     move_snake()
     draw_board()
-
     check_collision()
+    time.sleep(sleep)
 
 
 def draw_thread():
     while True:
-        main_call()
-
-        time.sleep(0.2)
+        main_call(SLEEP_DRAW)
 
 
 def main():
@@ -124,26 +139,22 @@ def main():
     draw_thread_instance.start()
 
     while True:
-        if keyboard.is_pressed("w") and direction != (1, 0):
+        if (keyboard.is_pressed("w") or keyboard.is_pressed("up")) and direction != (1, 0):
             direction = (-1, 0)
             is_horize = False
             main_call()
-            time.sleep(0.1)
-        elif keyboard.is_pressed("s") and direction != (-1, 0):
+        elif (keyboard.is_pressed("s") or keyboard.is_pressed("down")) and direction != (-1, 0):
             direction = (1, 0)
             is_horize = False
             main_call()
-            time.sleep(0.1)
-        elif keyboard.is_pressed("a") and direction != (0, 1):
+        elif (keyboard.is_pressed("a") or keyboard.is_pressed("left")) and direction != (0, 1):
             direction = (0, -1)
             is_horize = True
             main_call()
-            time.sleep(0.1)
-        elif keyboard.is_pressed("d") and direction != (0, -1):
+        elif (keyboard.is_pressed("d") or keyboard.is_pressed("right")) and direction != (0, -1):
             direction = (0, 1)
             is_horize = True
             main_call()
-            time.sleep(0.1)
 
 
 if __name__ == "__main__":
