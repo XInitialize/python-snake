@@ -10,11 +10,15 @@ from colorama import Back, Fore, Style, init
 init(autoreset=True)
 
 # 游戏区域大小
+def get_terminal_size():
+    rows, columns = os.popen("stty size", "r").read().split()
+    return int(rows)-3, int(columns)
 
-HEIGHT, WIDTH = 30, 100
+HEIGHT, WIDTH = get_terminal_size()
 
 # 蛇初始化
-snake = [[5, 27], [5, 26], [5, 25]]
+center_y,center_x = int(HEIGHT/2), int(WIDTH/2)
+snake = [[center_y, center_x+1], [center_y, center_x], [center_y, center_x-1]]
 direction = (0, 1)
 
 # 食物初始化
@@ -30,7 +34,9 @@ def clear_screen():
 
 is_horize = True
 HORI = f"{Fore.GREEN}■{Style.RESET_ALL}"
+HORI_HEAD = f"{Fore.BLUE}■{Style.RESET_ALL}"
 VERT = f"{Fore.GREEN}█{Style.RESET_ALL}"
+VERT_HEAD = f"{Fore.BLUE}█{Style.RESET_ALL}"
 
 CORNOR = [
     [f"{Fore.GREEN}╔{Style.RESET_ALL}", f"{Fore.GREEN}╗{Style.RESET_ALL}"],
@@ -41,13 +47,10 @@ CORNOR = [
 def draw_board():
     board = [[" " for _ in range(WIDTH)] for _ in range(HEIGHT)]
 
-    # # 绘制蛇
-    # for segment in snake:
-    #     board[segment[0]][segment[1]] = f"{Fore.GREEN}█{Style.RESET_ALL}"
     # 绘制蛇
     for i, segment in enumerate(snake):
         if i == 0:  # 头部
-            board[segment[0]][segment[1]] = HORI if is_horize else VERT
+            board[segment[0]][segment[1]] = HORI_HEAD if is_horize else VERT_HEAD
         else:
             prev_segment = snake[i - 1]
 
@@ -94,18 +97,20 @@ def move_snake():
 def check_collision():
     head = snake[0]
     if head in snake[1:] or head[0] in [0, HEIGHT - 1] or head[1] in [0, WIDTH - 1]:
-        return True
-    return False
+        print("Game over! Final score:", len(snake) - 3)
+        os._exit(0)
+
+
+def main_call():
+    move_snake()
+    draw_board()
+
+    check_collision()
 
 
 def draw_thread():
     while True:
-        move_snake()
-        draw_board()
-
-        if check_collision():
-            print("Game over! Final score:", len(snake) - 3)
-            sys.exit(0)
+        main_call()
 
         time.sleep(0.2)
 
@@ -122,26 +127,22 @@ def main():
         if keyboard.is_pressed("w") and direction != (1, 0):
             direction = (-1, 0)
             is_horize = False
-            move_snake()
-            draw_board()
+            main_call()
             time.sleep(0.1)
         elif keyboard.is_pressed("s") and direction != (-1, 0):
             direction = (1, 0)
             is_horize = False
-            move_snake()
-            draw_board()
+            main_call()
             time.sleep(0.1)
         elif keyboard.is_pressed("a") and direction != (0, 1):
             direction = (0, -1)
             is_horize = True
-            move_snake()
-            draw_board()
+            main_call()
             time.sleep(0.1)
         elif keyboard.is_pressed("d") and direction != (0, -1):
             direction = (0, 1)
             is_horize = True
-            move_snake()
-            draw_board()
+            main_call()
             time.sleep(0.1)
 
 
