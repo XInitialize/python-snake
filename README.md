@@ -10,3 +10,5 @@ pip3 install keyboard colorama --break-system-packages
 ```bash
 sudo python snake.py
 ```
+
+![terminal.gif](terminal.gif)
