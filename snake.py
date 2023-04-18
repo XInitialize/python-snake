@@ -10,14 +10,17 @@ from colorama import Back, Fore, Style, init
 init(autoreset=True)
 
 # 游戏区域大小
+
+
 def get_terminal_size():
     rows, columns = os.popen("stty size", "r").read().split()
     return int(rows)-3, int(columns)
 
+
 HEIGHT, WIDTH = get_terminal_size()
 
 # 蛇初始化
-center_y,center_x = int(HEIGHT/2), int(WIDTH/2)
+center_y, center_x = int(HEIGHT/2), int(WIDTH/2)
 snake = [[center_y, center_x+1], [center_y, center_x], [center_y, center_x-1]]
 direction = (0, 1)
 
@@ -43,13 +46,15 @@ BORDER = f"{Fore.WHITE}█{Style.RESET_ALL}"
 SLEEP_DRAW = 0.3
 SLEEP_PRESS_DRAW = 0.1
 
+
 def clear_screen():
     if os.name == "posix":
         os.system("clear")
     else:
         os.system("cls")
 
-def get_snake_color(color_code: float,char:str) -> str:
+
+def get_snake_color(color_code: float, char: str) -> str:
     """根据颜色代码生成蛇身部分的颜色。
 
     Args:
@@ -65,7 +70,7 @@ def draw_board():
     board = [[" " for _ in range(WIDTH)] for _ in range(HEIGHT)]
 
     # 绘制蛇
-    lensnake=len(snake)
+    lensnake = len(snake)
     for i, segment in enumerate(snake):
         if i == 0:  # 头部
             board[segment[0]][segment[1]] = HORI_HEAD if is_horize else VERT_HEAD
@@ -83,15 +88,15 @@ def draw_board():
                 xs = [prev_segment[1], segment[1], next_segment[1]]
                 if (ys.count(max(ys)) != 3) and (xs.count(max(xs)) != 3):
                     char = CORNOR[ys.count(max(ys))-1][xs.count(max(xs))-1]
-            board[segment[0]][segment[1]] = get_snake_color(i/lensnake,char)
+            board[segment[0]][segment[1]] = get_snake_color(i/lensnake, char)
     # 绘制食物
     board[food[0]][food[1]] = FOOD
 
     # 绘制边界
     for i in range(HEIGHT):
-        board[i][0],board[i][-1] = BORDER,BORDER
+        board[i][0], board[i][-1] = BORDER, BORDER
     for i in range(WIDTH):
-        board[0][i],board[-1][i] = BORDER,BORDER
+        board[0][i], board[-1][i] = BORDER, BORDER
 
     # 其他输出
     clear_screen()
